@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter PCAP</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .filter-analysis-btn {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease-in-out;
+}
+
+.filter-analysis-btn:hover {
+    background-color: #0056b3;
+}
+
+        h2 {
+            font-size: 2.5em;
+            margin-top: 50px;
+            color: #2c3e50;
+        }
+
+        input[type="text"], input[type="submit"], .filter-analysis-btn, .go-back-btn {
+            padding: 12px 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1.1em;
+            margin: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        input[type="text"] {
+            width: 220px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .filter-analysis-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .filter-analysis-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .go-back-btn {
+            background-color: #e74c3c;
+            color: white;
+            display: none;
+        }
+
+        .go-back-btn:hover {
+            background-color: #c0392b;
+        }
+
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .chart-section {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .chart-section > div {
+            width: 45%;
+            min-width: 300px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Filter PCAP Data</h2>
+
+    <div id="filter-section">
+        <form method="POST">
+            Source IP: <input type="text" name="src_ip" value="{{ request.form.src_ip }}">
+            Destination IP: <input type="text" name="dst_ip" value="{{ request.form.dst_ip }}">
+            Protocol: <input type="text" name="protocol" value="{{ request.form.protocol }}">
+            Source Port: <input type="text" name="src_port" value="{{ request.form.src_port }}">
+            Destination Port: <input type="text" name="dst_port" value="{{ request.form.dst_port }}">
+            <input type="submit" value="Apply Filter">
+        </form>
+
+        <button class="filter-analysis-btn" onclick="showAnalysis()">Protocol Analysis</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/network-graph'">Network Graph</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/http-analysis'">HTTP Analysis</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/dns-analysis'">DNS Analysis</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/icmp-analysis'">ICMP Analysis</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/ftp-analysis'">FTP Analysis</button>
+        <button class="filter-analysis-btn" onclick="window.location.href='/tcp-analysis'">TCP Analysis</button>
+
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-container" id="protocolDistribution">
+            <h3>Protocol Distribution</h3>
+            <canvas id="protocolChart"></canvas>
+        </div>
+      <!--  <div class="chart-container" id="topIpsChartContainer">
+            <h3>Top 5 Active IPs</h3>
+            <canvas id="topIpsChart"></canvas>
+        </div>
+        -->
+    </div>
+
+    <button class="go-back-btn" id="goBackBtn" onclick="showTable()">Go Back</button>
+
+    <div id="data-table-section">
+ <table>
+    <thead>
+        <tr>
+            <th>Packet No</th>
+            <th>Source IP</th>
+            <th>Destination IP</th>
+            <th>Protocol</th>
+            <th>Source Port</th>
+            <th>Destination Port</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for('dashboard', selected_ip=row['Source IP']) }}?ip_type=src">{{ row["Source IP"] }}</a></td>
+            <td><a href="{{ url_for('dashboard', selected_ip=row['Destination IP']) }}?ip_type=dst">{{ row["Destination IP"] }}</a></td>
+            <td>{{ row["Protocol"] }}</td>
+            <td>{{ row["Source Port"] }}</td>
+            <td>{{ row["Destination Port"] }}</td>
+            <td><a href="{{ url_for('packet_details', packet_id=loop.index) }}">View Details</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+    </div>
+
+    <script>
+        function showAnalysis() {
+            document.getElementById("filter-section").style.display = "none";
+            document.getElementById("data-table-section").style.display = "none";
+            document.getElementById("protocolDistribution").style.display = "block";
+            document.getElementById("topIpsChartContainer").style.display = "block";
+            document.getElementById("goBackBtn").style.display = "inline-block";
+        }
+
+        function showTable() {
+            document.getElementById("filter-section").style.display = "block";
+            document.getElementById("data-table-section").style.display = "block";
+            document.getElementById("protocolDistribution").style.display = "none";
+            document.getElementById("topIpsChartContainer").style.display = "none";
+            document.getElementById("goBackBtn").style.display = "none";
+        }
+
+        var ctx1 = document.getElementById("protocolChart").getContext("2d");
+        var protocolData = {
+            labels: {{ protocol_counts.keys()|list|tojson }},
+            datasets: [{
+                label: 'Protocol Count',
+                data: {{ protocol_counts.values()|list|tojson }},
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500']
+            }]
+        };
+        new Chart(ctx1, { type: "pie", data: protocolData });
+
+        var ctx2 = document.getElementById("topIpsChart").getContext("2d");
+        var ipData = {
+            labels: {{ top_ips.keys()|list|tojson }},
+            datasets: [{
+                label: 'Packet Count',
+                data: {{ top_ips.values()|list|tojson }},
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500']
+            }]
+        };
+        new Chart(ctx2, { type: "bar", data: ipData });
+    </script>
+
+</body>
+</html>
+

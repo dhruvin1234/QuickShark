@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCAP Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>PCAP Statistics</h2>
+    <p><strong>Total Packets:</strong> {{ total_packets }}</p>
+    <p><strong>Unique IPs:</strong> {{ unique_ips }}</p>
+
+    <h3>Protocol Distribution</h3>
+    <canvas id="protocolChart"></canvas>
+
+    <h3>Top 5 Active IPs</h3>
+    <canvas id="topIpsChart"></canvas>
+
+    <script>
+        new Chart(document.getElementById("protocolChart").getContext("2d"), {
+            type: "pie",
+            data: {
+                labels: {{ protocol_counts.keys()|list|tojson }},
+                datasets: [{ data: {{ protocol_counts.values()|list|tojson }}, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500'] }]
+            }
+        });
+
+        new Chart(document.getElementById("topIpsChart").getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: {{ top_ips.keys()|list|tojson }},
+                datasets: [{ data: {{ top_ips.values()|list|tojson }}, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500'] }]
+            }
+        });
+    </script>
+</body>
+</html>
+

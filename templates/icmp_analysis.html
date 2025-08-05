@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICMP Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .table-container {
+            margin: 30px auto;
+            width: 90%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .charts-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .chart-container {
+            width: 400px; /* Fixed width */
+            height: 400px; /* Fixed height */
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-container h3 {
+            text-align: center;
+            color: #007BFF;
+            margin-bottom: 10px;
+        }
+        .pie-chart {
+            width: 300px !important;  /* Fixed width for chart */
+            height: 300px !important; /* Fixed height for chart */
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                width: 90%;
+                height: auto;
+            }
+            .pie-chart {
+                width: 90% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>ICMP Traffic Analysis</h2>
+</header>
+
+<!-- ICMP Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Type</th>
+          <!--      <th>Code</th>    -->
+                <th>TTL</th>
+                <th>Sequence Number</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in icmp_data %}
+            <tr>
+                <td>{{ entry["Source IP"] }}</td>
+                <td>{{ entry["Destination IP"] }}</td>
+                <td>{{ entry["Type"] }}</td>
+           <!--     <td>{{ entry["Code"] }}</td>    -->
+                <td>{{ entry["TTL"] }}</td>
+                <td>{{ entry["Sequence Number"] }}</td>
+                <td>{{ entry["Timestamp"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ICMP Pie Chart -->
+<div class="charts-container">
+    <div class="chart-container">
+        <h3>ICMP Type Distribution</h3>
+        <canvas id="icmpTypeChart" class="pie-chart"></canvas>
+    </div>
+</div>
+
+<script>
+    function updateICMPChart() {
+        $.getJSON('/icmp_stats', function(data) {
+            var icmpLabels = Object.keys(data.icmp_types);
+            var icmpCounts = Object.values(data.icmp_types);
+
+            var ctx = document.getElementById('icmpTypeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: icmpLabels,
+                    datasets: [{
+                        data: icmpCounts,
+                        backgroundColor: ["#ff6384", "#36a2eb", "#ffce56", "#4bc0c0", "#9966ff"],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    updateICMPChart();
+</script>
+
+</body>
+</html>
+

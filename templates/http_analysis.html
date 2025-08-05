@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Analysis</title>
+    
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f6f9; /* Light Blue-Gray */
+            color: #333333; /* Dark Gray */
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50; /* Deep Blue-Gray */
+            margin-bottom: 20px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            background: white;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff; /* White */
+            color: #333333; /* Dark Gray */
+        }
+
+        th, td {
+            border: 1px solid #dde2eb; /* Light Blue-Gray Border */
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: linear-gradient(to right, #3a8ee6, #6ba8f8); /* Blue Header */
+            color: #ffffff; /* White Text */
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        tr:hover {
+            background: #e3ebf7; /* Light Blue Hover */
+        }
+
+        /* Filter Box */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        select, input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #b3c2d1;
+            border-radius: 5px;
+            background: #ffffff;
+            color: #333333;
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            width: 45%;
+            display: inline-block;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🔍 HTTP Packet Analysis</h2>
+    <!--    
+    
+    <div class="filter-container">
+        <select id="methodFilter">
+            <option value="">Filter by Method</option>
+            {% for method in stats.method_counts.keys() %}
+                <option value="{{ method }}">{{ method }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="statusFilter">
+            <option value="">Filter by Status Code</option>
+            {% for code in stats.status_counts.keys() %}
+                <option value="{{ code }}">{{ code }}</option>
+            {% endfor %}
+        </select>
+        
+        -->
+   
+       <!-- <input type="text" id="searchURI" placeholder="Search URI">    -->
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table id="httpTable">
+            <tr>
+                <th>Method</th>
+                <th>Host</th>
+                <th>URI</th>
+                <th>User-Agent</th>
+           <!--     <th>Content-Type</th>   -->
+             <!--          <th>Content-Length</th>    -->
+                <th>Status Code</th>
+           <!--      <th>Headers</th>         -->
+            </tr>
+            {% for packet in packets %}
+            <tr>
+                <td>{{ packet["Method"] }}</td>
+                <td>{{ packet["Host"] }}</td>
+                <td>{{ packet["URI"] }}</td>
+                <td>{{ packet["User-Agent"] }}</td>
+              <!--  <td>{{ packet["Content-Type"] }}</td>   -->
+             <!--   <td>{{ packet["Content-Length"] }}</td>  -->
+                <td>{{ packet["Status Code"] }}</td>
+           <!--     <td>{{ packet["Headers"] }}</td>   -->
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <h2>📊 HTTP Analysis Charts</h2>
+
+    <!-- Charts -->
+    <div class="chart-container">
+        <canvas id="methodChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Convert Jinja data to JavaScript
+            var methodLabels = {{ stats.method_counts.keys()|list|tojson }};
+            var methodData = {{ stats.method_counts.values()|list|tojson }};
+            var statusLabels = {{ stats.status_counts.keys()|list|tojson }};
+            var statusData = {{ stats.status_counts.values()|list|tojson }};
+            
+            // Define Chart Colors
+            var chartColors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'];
+
+            // HTTP Methods Chart
+            if (methodData.length > 0) {
+                new Chart(document.getElementById('methodChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: methodLabels,
+                        datasets: [{
+                            label: 'HTTP Methods',
+                            data: methodData,
+                            backgroundColor: chartColors
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Status Codes Chart
+            if (statusData.length > 0) {
+                new Chart(document.getElementById('statusChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: statusLabels,
+                        datasets: [{
+                            label: 'Status Codes',
+                            data: statusData,
+                            backgroundColor: chartColors
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            }
+
+            // Table Filters
+            var methodFilter = document.getElementById("methodFilter");
+            var statusFilter = document.getElementById("statusFilter");
+            var searchURI = document.getElementById("searchURI");
+
+            function filterTable() {
+                var methodVal = methodFilter.value.toLowerCase();
+                var statusVal = statusFilter.value.toLowerCase();
+                var searchVal = searchURI.value.toLowerCase();
+                var rows = document.querySelectorAll("#httpTable tr:not(:first-child)");
+
+                rows.forEach(row => {
+                    var method = row.cells[0].textContent.toLowerCase();
+                    var status = row.cells[6].textContent.toLowerCase();
+                    var uri = row.cells[2].textContent.toLowerCase();
+
+                    if (
+                        (methodVal === "" || method.includes(methodVal)) &&
+                        (statusVal === "" || status.includes(statusVal)) &&
+                        (searchVal === "" || uri.includes(searchVal))
+                    ) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            }
+
+            methodFilter.addEventListener("change", filterTable);
+            statusFilter.addEventListener("change", filterTable);
+            searchURI.addEventListener("keyup", filterTable);
+        });
+    </script>
+
+</body>
+</html>
+

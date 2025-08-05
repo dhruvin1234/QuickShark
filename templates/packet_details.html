@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packet Details</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7fa; text-align: center; }
+        .container { width: 90%; max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        pre { text-align: left; white-space: pre-wrap; font-family: monospace; background: #f1f1f1; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        h3 { color: #2c3e50; text-align: left; }
+        a { display: block; margin-top: 20px; color: #007BFF; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<!--
+    <div class="container">
+        <h2>Packet Details - Packet #{{ packet["Packet Number"] }}</h2>
+
+        <h3>Full Raw Data:</h3>
+        <pre>{{ packet["Raw Data"] }}</pre>
+-->
+        <h3>Headers:</h3>
+        {% for header, details in packet["Headers"].items() %}
+            <h3>{{ header }}</h3>
+            <pre>{{ details | tojson(indent=2) }}</pre>
+        {% endfor %}
+
+        <a href="{{ url_for('filter_data') }}">Back to Filter Page</a>
+    </div>
+</body>
+</html>
+

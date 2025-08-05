@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTP Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .table-container {
+            margin: 30px auto;
+            width: 90%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .charts-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0;
+            gap: 20px;
+        }
+        .chart-container {
+            width: 45%;
+            min-width: 350px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container h3 {
+            text-align: center;
+            color: #007BFF;
+        }
+        .pie-chart {
+            width: 100%;
+            max-height: 300px;
+        }
+        @media (max-width: 768px) {
+            .charts-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .chart-container {
+                width: 80%;
+            }
+            table {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>FTP Traffic Analysis</h2>
+</header>
+
+<!-- FTP Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>FTP Command</th>
+                <th>Response Code</th>
+                <th>File Name</th>
+            <!--    <th>Transfer Status</th>    -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in ftp_data %}
+            <tr>
+                <td>{{ entry["Source IP"] }}</td>
+                <td>{{ entry["Destination IP"] }}</td>
+                <td>{{ entry["Command"] }}</td>
+                <td>{{ entry["Response Code"] }}</td>
+                <td>{{ entry["File Name"] if entry["File Name"] else "N/A" }}</td>
+       <!--         <td>{{ entry["Status"] }}</td>   -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- FTP Pie Charts -->
+<div class="charts-container">
+    <div class="chart-container">
+        <h3>FTP Command Distribution</h3>
+        <canvas id="ftpCommandChart" class="pie-chart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h3>FTP Response Code Distribution</h3>
+        <canvas id="ftpResponseChart" class="pie-chart"></canvas>
+    </div>
+</div>
+
+<script>
+    function updateFTPCharts() {
+        $.getJSON('/ftp_stats', function(data) {
+            var commandLabels = Object.keys(data.ftp_commands);
+            var commandCounts = Object.values(data.ftp_commands);
+            var responseLabels = Object.keys(data.ftp_responses);
+            var responseCounts = Object.values(data.ftp_responses);
+
+            var ctx1 = document.getElementById('ftpCommandChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: commandLabels,
+                    datasets: [{
+                        data: commandCounts,
+                        backgroundColor: ["#ff6384", "#36a2eb", "#ffce56", "#4bc0c0", "#9966ff"],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    aspectRatio: 1,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            var ctx2 = document.getElementById('ftpResponseChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: responseLabels,
+                    datasets: [{
+                        data: responseCounts,
+                        backgroundColor: ["#36a2eb", "#ff6384", "#ffce56", "#9966ff", "#4bc0c0"],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    aspectRatio: 1,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+    }
+
+    updateFTPCharts();
+</script>
+
+</body>
+</html>
+

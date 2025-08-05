@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 24px;
+        }
+        .table-container {
+            width: 95%;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        table th {
+            background: #4CAF50;
+            color: white;
+        }
+        .chart-container {
+            width: 90%;
+            max-width: 800px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>TCP Analysis</h1>
+</header>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Packet Number</th>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Source Port</th>
+                <th>Destination Port</th>
+                <th>Sequence Number</th>
+                <th>Acknowledgment Number</th>
+                <th>Window Size</th>
+                <th>Flags</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in tcp_entries %}
+            <tr>
+                <td>{{ entry.frame_number }}</td>
+                <td>{{ entry.src_ip }}</td>
+                <td>{{ entry.dest_ip }}</td>
+                <td>{{ entry.src_port }}</td>
+                <td>{{ entry.dest_port }}</td>
+                <td>{{ entry.seq_num }}</td>
+                <td>{{ entry.ack_num }}</td>
+                <td>{{ entry.window_size }}</td>
+                <td>{{ entry.flags }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="chart-container">
+    <h3>TCP Flags Distribution</h3>
+    <canvas id="tcpFlagsChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <h3>TCP Port Distribution</h3>
+    <canvas id="tcpPortsChart"></canvas>
+</div>
+
+<script>
+    var ctx1 = document.getElementById("tcpFlagsChart").getContext("2d");
+    var tcpFlagsData = {
+        labels: {{ tcp_flags_distribution.keys()|list|tojson }},
+        datasets: [{
+            label: 'TCP Flags Distribution',
+            data: {{ tcp_flags_distribution.values()|list|tojson }},
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500', '#9C27B0', '#795548']
+        }]
+    };
+    new Chart(ctx1, { type: "pie", data: tcpFlagsData });
+
+    var ctx2 = document.getElementById("tcpPortsChart").getContext("2d");
+    var tcpPortsData = {
+        labels: {{ tcp_port_distribution.keys()|list|tojson }},
+        datasets: [{
+            label: 'TCP Port Usage',
+            data: {{ tcp_port_distribution.values()|list|tojson }},
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FFA500', '#9C27B0', '#795548']
+        }]
+    };
+    new Chart(ctx2, { type: "bar", data: tcpPortsData, options: { responsive: true } });
+</script>
+
+</body>
+</html>
+

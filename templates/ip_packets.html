@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packets for IP - {{ ip_address }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f4f7fa; 
+            text-align: center; 
+            margin: 0;
+            padding: 20px;
+        }
+        .container { 
+            width: 90%; 
+            max-width: 900px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+        pre { 
+            text-align: left; 
+            white-space: pre-wrap; 
+            font-family: monospace; 
+            background: #f1f1f1; 
+            padding: 10px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+        }
+        h3 { 
+            color: #2c3e50; 
+            text-align: left; 
+        }
+        a { 
+            display: block; 
+            margin-top: 20px; 
+            color: #007BFF; 
+            text-decoration: none; 
+        }
+        a:hover { text-decoration: underline; }
+        .collapsible {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 14px;
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+        .active, .collapsible:hover {
+            background-color: #2980b9;
+        }
+        .packet-content {
+            display: none;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Packets for IP: {{ ip_address }}</h2>
+
+        {% if ip_packets %}
+            {% for packet in ip_packets %}
+                <button class="collapsible">
+                    Packet {{ loop.index }} - Source IP: {{ packet["Source IP"] }} | Destination IP: {{ packet["Destination IP"] }}
+                </button>
+
+                <div class="packet-content">
+                    <h3>Full Raw Data:</h3>
+                    <pre>{{ packet["Raw Data"] }}</pre>
+              
+                    <h3>Headers:</h3>
+                    {% for header, details in packet["Headers"].items() %}
+                        <h3>{{ header }}</h3>
+                        <pre>{{ details | tojson(indent=2) }}</pre>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No packets found for this IP.</p>
+        {% endif %}
+        <a href="{{ url_for('dashboard', selected_ip=ip_address) }}">Back to Dashboard</a>
+    </div>
+
+    <script>
+        document.querySelectorAll(".collapsible").forEach(button => {
+            button.addEventListener("click", function() {
+                this.classList.toggle("active");
+                let content = this.nextElementSibling;
+                content.style.display = content.style.display === "block" ? "none" : "block";
+            });
+        });
+    </script>
+</body>
+</html>
+
