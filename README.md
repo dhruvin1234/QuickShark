@@ -15,9 +15,13 @@ git clone https://github.com/dhruvin1234/QuickShark.git
 # Step 2: Go into the project folder
 cd QuickShark
 
-# Step 3: Install requirements
-pip install -r requirements.txt
-
-# Step 4: Run the application
+# Step 3: Run the application
 python app.py
 ```
+## 🗂️ Usage
+
+- Upload .pcap files via the web interface.
+- Select the desired protocol‑specific modules.
+- View extracted insights and threat intel.
+
+## 📷 Screenshots
